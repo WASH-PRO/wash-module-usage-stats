@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Usage Stats Collector</title>
+  <style>
+    :root { font-family: system-ui, sans-serif; color: #1e293b; background: #f8fafc; }
+    body { margin: 0; padding: 1rem 1.25rem; }
+    h1 { font-size: 1.1rem; margin: 0 0 0.75rem; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem; margin-bottom: 1rem; }
+    .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 0.75rem; }
+    .card b { display: block; font-size: 1.25rem; }
+    label { display: block; margin-bottom: 0.75rem; font-size: 0.875rem; }
+    input { width: 100%; max-width: 12rem; padding: 0.4rem 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; }
+    button { padding: 0.45rem 0.9rem; border-radius: 0.5rem; border: 0; background: #7c3aed; color: #fff; cursor: pointer; }
+    pre { background: #fff; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 0.75rem; overflow: auto; font-size: 0.75rem; }
+    .muted { color: #64748b; font-size: 0.8rem; }
+  </style>
+</head>
+<body>
+  <h1>Сборщик загруженности</h1>
+  <p class="muted" id="updated">—</p>
+  <div class="grid" id="stats"></div>
+  <form id="settings-form">
+    <label>Интервал опроса (сек)<input type="number" name="poll_interval" min="30" max="3600" /></label>
+    <label>Глубина выборки (часы)<input type="number" name="lookback_hours" min="1" max="168" /></label>
+    <button type="submit">Сохранить</button>
+  </form>
+  <h2 style="font-size:0.95rem;margin:1rem 0 0.5rem">Агрегат</h2>
+  <pre id="snapshot">Загрузка…</pre>
+  <script src="wash-module-sdk.js"></script>
+  <script>
+    const MODULE_ID = 'usage-stats-collector';
+
+    async function refresh() {
+      const status = await WashModule.api(`/installed/${MODULE_ID}/status`);
+      const snap = status.snapshot;
+      const stats = document.getElementById('stats');
+      if (snap) {
+        document.getElementById('updated').textContent = `${snap.recordedAt} · ${snap.lookbackHours}h lookback`;
+        stats.innerHTML = [
+          ['Моек', snap.washCount],
+          ['Запусков', snap.totalLaunchCount],
+          ['Секунд', snap.totalUsageTimeSec],
+          ['Строк', snap.rowsConsidered],
+        ].map(([k,v]) => `<div class="card"><span>${k}</span><b>${v ?? 0}</b></div>`).join('');
+        document.getElementById('snapshot').textContent = JSON.stringify(snap, null, 2);
+      } else {
+        stats.innerHTML = '<div class="card muted">Нет данных</div>';
+      }
+      if (status.settings) {
+        document.querySelector('[name=poll_interval]').value = status.settings.poll_interval ?? 120;
+        document.querySelector('[name=lookback_hours]').value = status.settings.lookback_hours ?? 24;
+      }
+    }
+
+    document.getElementById('settings-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      await WashModule.api(`/installed/${MODULE_ID}/settings`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          settings: {
+            poll_interval: Number(fd.get('poll_interval')),
+            lookback_hours: Number(fd.get('lookback_hours')),
+          },
+        }),
+      });
+    });
+
+    refresh();
+    setInterval(refresh, 15000);
+  </script>
+</body>
+</html>

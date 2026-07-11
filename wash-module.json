@@ -1,0 +1,36 @@
+{
+  "id": "usage-stats-collector",
+  "name": { "ru": "Сборщик загруженности", "en": "Usage Stats Collector" },
+  "description": {
+    "ru": "Собирает статистику загруженности постов через API usage-stats.",
+    "en": "Collects post workload statistics via usage-stats API."
+  },
+  "version": "1.0.0",
+  "author": "WASH-PRO",
+  "license": "MIT",
+  "category": "analytics",
+  "icon": "assets/icon.svg",
+  "repository": "https://github.com/WASH-PRO/wash-module-usage-stats",
+  "dependencies": [],
+  "minCrmVersion": "1.1.29",
+  "entrypoint": "src/main.py",
+  "scriptType": "daemon",
+  "settingsSchema": [
+    {
+      "key": "poll_interval",
+      "type": "number",
+      "label": { "ru": "Интервал опроса (сек)", "en": "Poll interval (sec)" },
+      "default": 120,
+      "min": 30,
+      "max": 3600
+    },
+    {
+      "key": "lookback_hours",
+      "type": "number",
+      "label": { "ru": "Глубина выборки (часы)", "en": "Lookback (hours)" },
+      "default": 24,
+      "min": 1,
+      "max": 168
+    }
+  ]
+}
