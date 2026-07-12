@@ -1,16 +1,18 @@
+**Language:** **English** · [Русский](README.ru.md)
+
 # wash-module-usage-stats
 
-Модуль WASH PRO CRM: сбор статистики загруженности через `GET /api/crm/usage-stats`.
+WASH PRO CRM module: workload statistics collection via `GET /api/crm/usage-stats`.
 
-## Установка
+## Install
 
-Dashboard → Автоматизация → Модули → Установить.
+Dashboard → Automation → Modules → Install.
 
-## Настройки
+## Settings
 
-- `poll_interval` — интервал опроса API (секунды)
-- `lookback_hours` — глубина агрегации (часы)
+- `poll_interval` — API poll interval (seconds)
+- `lookback_hours` — aggregation depth (hours)
 
-## Данные
+## Data
 
-Агрегаты сохраняются в `data/last_snapshot.json`.
+Aggregates are saved to `data/last_snapshot.json`.

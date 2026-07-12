@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Справка — Сборщик загруженности</title>
+  <title>Help — Usage Stats Collector</title>
   <style>
     body { font-family: system-ui, sans-serif; line-height: 1.55; color: #1e293b; margin: 0; padding: 1.25rem; max-width: 42rem; }
     h1 { font-size: 1.15rem; margin: 0 0 0.75rem; }
@@ -13,14 +13,14 @@
   </style>
 </head>
 <body>
-  <h1>Сборщик загруженности</h1>
-  <p>Модуль загружает записи <code>GET /api/crm/usage-stats</code> и агрегирует секунды использования и число запусков по мойкам за выбранный период.</p>
-  <h2>Настройки</h2>
+  <h1>Usage Stats Collector</h1>
+  <p>The module loads records from <code>GET /api/crm/usage-stats</code> and aggregates usage seconds and launch counts per car wash for the selected period.</p>
+  <h2>Settings</h2>
   <ul>
-    <li><code>poll_interval</code> — интервал опроса (сек).</li>
-    <li><code>lookback_hours</code> — глубина выборки в часах (1–168).</li>
+    <li><code>poll_interval</code> — poll interval (sec).</li>
+    <li><code>lookback_hours</code> — lookback window in hours (1–168).</li>
   </ul>
-  <h2>Данные</h2>
-  <p>Результат в <code>data/last_snapshot.json</code>: поля <code>byWash</code>, <code>totalUsageTimeSec</code>, <code>totalLaunchCount</code>.</p>
+  <h2>Data</h2>
+  <p>Result in <code>data/last_snapshot.json</code>: fields <code>byWash</code>, <code>totalUsageTimeSec</code>, <code>totalLaunchCount</code>.</p>
 </body>
 </html>
