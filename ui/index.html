@@ -40,8 +40,8 @@
         form.poll_interval.value = settings.poll_interval ?? 120;
         form.lookback_hours.value = settings.lookback_hours ?? 24;
       },
-      metrics(snap) {
-        if (!snap) return [];
+      metrics(snap, status) {
+        if (!snap || !snap.recordedAt) return [];
         return [
           { label: WashModule.t({ ru: 'Моек', en: 'Washes' }), value: snap.washCount ?? 0, accent: true },
           { label: WashModule.t({ ru: 'Запусков', en: 'Launches' }), value: snap.totalLaunchCount ?? 0 },
@@ -49,9 +49,13 @@
           { label: WashModule.t({ ru: 'Строк CRM', en: 'CRM rows' }), value: snap.rowsConsidered ?? 0, hint: `${snap.lookbackHours || '—'}h` },
         ];
       },
-      renderOverview(snap) {
-        if (!snap) {
-          return `<div class="wm-empty">${WashModule.escapeHtml(WashModule.t({ ru: 'Нет агрегата.', en: 'No aggregate yet.' }))}</div>`;
+      renderOverview(snap, status) {
+        if (!snap || !snap.recordedAt) {
+          const running = status && (status.activeRunStatus === 'running' || (status.state && status.state.status === 'running'));
+          const hint = running
+            ? WashModule.t({ ru: 'Ожидание первого сбора статистики…', en: 'Waiting for the first stats collection…' })
+            : WashModule.t({ ru: 'Нет агрегата — запустите модуль.', en: 'No aggregate yet — start the module.' });
+          return `<div class="wm-empty">${WashModule.escapeHtml(hint)}</div>`;
         }
         const byWash = snap.byWash && typeof snap.byWash === 'object' ? snap.byWash : {};
         const rows = Object.entries(byWash)

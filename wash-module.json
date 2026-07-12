@@ -5,7 +5,7 @@
     "ru": "Собирает статистику загруженности постов через API usage-stats.",
     "en": "Collects post workload statistics via usage-stats API."
   },
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "WASH-PRO",
   "license": "MIT",
   "category": "analytics",
