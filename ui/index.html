@@ -4,73 +4,70 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Usage Stats Collector</title>
-  <style>
-    :root { font-family: system-ui, sans-serif; color: #1e293b; background: #f8fafc; }
-    body { margin: 0; padding: 1rem 1.25rem; }
-    h1 { font-size: 1.1rem; margin: 0 0 0.75rem; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem; margin-bottom: 1rem; }
-    .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 0.75rem; }
-    .card b { display: block; font-size: 1.25rem; }
-    label { display: block; margin-bottom: 0.75rem; font-size: 0.875rem; }
-    input { width: 100%; max-width: 12rem; padding: 0.4rem 0.5rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; }
-    button { padding: 0.45rem 0.9rem; border-radius: 0.5rem; border: 0; background: #7c3aed; color: #fff; cursor: pointer; }
-    pre { background: #fff; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 0.75rem; overflow: auto; font-size: 0.75rem; }
-    .muted { color: #64748b; font-size: 0.8rem; }
-  </style>
+  <link rel="stylesheet" href="wash-module-ui.css" />
 </head>
-<body>
-  <h1>Сборщик загруженности</h1>
-  <p class="muted" id="updated">—</p>
-  <div class="grid" id="stats"></div>
-  <form id="settings-form">
-    <label>Интервал опроса (сек)<input type="number" name="poll_interval" min="30" max="3600" /></label>
-    <label>Глубина выборки (часы)<input type="number" name="lookback_hours" min="1" max="168" /></label>
-    <button type="submit">Сохранить</button>
-  </form>
-  <h2 style="font-size:0.95rem;margin:1rem 0 0.5rem">Агрегат</h2>
-  <pre id="snapshot">Загрузка…</pre>
+<body class="wm-body">
+  <div id="wm-app"></div>
   <script src="wash-module-sdk.js"></script>
   <script>
-    const MODULE_ID = 'usage-stats-collector';
-
-    async function refresh() {
-      const status = await WashModule.api(`/installed/${MODULE_ID}/status`);
-      const snap = status.snapshot;
-      const stats = document.getElementById('stats');
-      if (snap) {
-        document.getElementById('updated').textContent = `${snap.recordedAt} · ${snap.lookbackHours}h lookback`;
-        stats.innerHTML = [
-          ['Моек', snap.washCount],
-          ['Запусков', snap.totalLaunchCount],
-          ['Секунд', snap.totalUsageTimeSec],
-          ['Строк', snap.rowsConsidered],
-        ].map(([k,v]) => `<div class="card"><span>${k}</span><b>${v ?? 0}</b></div>`).join('');
-        document.getElementById('snapshot').textContent = JSON.stringify(snap, null, 2);
-      } else {
-        stats.innerHTML = '<div class="card muted">Нет данных</div>';
-      }
-      if (status.settings) {
-        document.querySelector('[name=poll_interval]').value = status.settings.poll_interval ?? 120;
-        document.querySelector('[name=lookback_hours]').value = status.settings.lookback_hours ?? 24;
-      }
-    }
-
-    document.getElementById('settings-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const fd = new FormData(e.target);
-      await WashModule.api(`/installed/${MODULE_ID}/settings`, {
-        method: 'PUT',
-        body: JSON.stringify({
-          settings: {
-            poll_interval: Number(fd.get('poll_interval')),
-            lookback_hours: Number(fd.get('lookback_hours')),
-          },
-        }),
-      });
+    WashModule.createPage({
+      moduleId: 'usage-stats-collector',
+      accent: '#7c3aed',
+      refreshInterval: 15000,
+      title: { ru: 'Сборщик загруженности', en: 'Usage stats collector' },
+      subtitle: {
+        ru: 'Агрегирует usage-stats CRM за выбранный период и сохраняет сводку в data/.',
+        en: 'Aggregates CRM usage stats for the selected window and stores summary in data/.',
+      },
+      settingsHtml: `
+        <div class="wm-grid-2">
+          <div class="wm-field">
+            <label class="wm-field-label">${WashModule.t({ ru: 'Интервал опроса (сек)', en: 'Poll interval (sec)' })}</label>
+            <input class="wm-input" type="number" name="poll_interval" min="30" max="3600" />
+          </div>
+          <div class="wm-field">
+            <label class="wm-field-label">${WashModule.t({ ru: 'Глубина выборки (часы)', en: 'Lookback (hours)' })}</label>
+            <input class="wm-input" type="number" name="lookback_hours" min="1" max="168" />
+          </div>
+        </div>`,
+      collectSettings(form) {
+        return {
+          poll_interval: Number(form.poll_interval.value),
+          lookback_hours: Number(form.lookback_hours.value),
+        };
+      },
+      applySettings(settings, form) {
+        form.poll_interval.value = settings.poll_interval ?? 120;
+        form.lookback_hours.value = settings.lookback_hours ?? 24;
+      },
+      metrics(snap) {
+        if (!snap) return [];
+        return [
+          { label: WashModule.t({ ru: 'Моек', en: 'Washes' }), value: snap.washCount ?? 0, accent: true },
+          { label: WashModule.t({ ru: 'Запусков', en: 'Launches' }), value: snap.totalLaunchCount ?? 0 },
+          { label: WashModule.t({ ru: 'Секунд работы', en: 'Usage seconds' }), value: snap.totalUsageTimeSec ?? 0 },
+          { label: WashModule.t({ ru: 'Строк CRM', en: 'CRM rows' }), value: snap.rowsConsidered ?? 0, hint: `${snap.lookbackHours || '—'}h` },
+        ];
+      },
+      renderOverview(snap) {
+        if (!snap) {
+          return `<div class="wm-empty">${WashModule.escapeHtml(WashModule.t({ ru: 'Нет агрегата.', en: 'No aggregate yet.' }))}</div>`;
+        }
+        const byWash = snap.byWash && typeof snap.byWash === 'object' ? snap.byWash : {};
+        const rows = Object.entries(byWash)
+          .sort((a, b) => (b[1].launchCount || 0) - (a[1].launchCount || 0))
+          .slice(0, 10)
+          .map(([id, v]) =>
+            `<li><span class="wm-kv"><span>${WashModule.escapeHtml(id)}</span><span>${WashModule.escapeHtml(String(v.launchCount || 0))} / ${WashModule.escapeHtml(String(v.usageTime || 0))}s</span></span></li>`
+          )
+          .join('');
+        return `
+          <h2 class="wm-section-title">${WashModule.t({ ru: 'Топ моек по запускам', en: 'Top washes by launches' })}</h2>
+          ${rows ? `<ul class="wm-list">${rows}</ul>` : `<p class="wm-field-hint">${WashModule.t({ ru: 'Нет данных за период.', en: 'No data for the period.' })}</p>`}
+          <h2 class="wm-section-title" style="margin-top:1rem">${WashModule.t({ ru: 'Полный агрегат', en: 'Full aggregate' })}</h2>
+          <pre class="wm-code">${WashModule.escapeHtml(JSON.stringify(snap, null, 2))}</pre>`;
+      },
     });
-
-    refresh();
-    setInterval(refresh, 15000);
   </script>
 </body>
 </html>
