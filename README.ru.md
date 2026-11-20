@@ -16,3 +16,7 @@ Dashboard → Автоматизация → Модули → Установит
 ## Данные
 
 Агрегаты сохраняются в `data/last_snapshot.json`.
+
+---
+
+**Сайт:** [wash-pro.tech](https://wash-pro.tech) · **GitHub:** [WASH-PRO](https://github.com/WASH-PRO)
