@@ -16,3 +16,7 @@ Dashboard → Automation → Modules → Install.
 ## Data
 
 Aggregates are saved to `data/last_snapshot.json`.
+
+---
+
+**Website:** [wash-pro.tech](https://wash-pro.tech) · **GitHub:** [WASH-PRO](https://github.com/WASH-PRO)
